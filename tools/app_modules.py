@@ -59,29 +59,59 @@ def cargar_contrato(par):
     return contract
 
 
+### VERSION ORIGINAL ANTES DE ESTUDIAR EL TEMA DE MARGENES DE CUENTA
+### DEJAMOS LA FUNCION PORQUE LOS MARGENES DE BINANCE NO SON LOS MISMOS QUE LOS DE BINGX
+# def apalancamiento(precio_entrada, worst_sl, direccion_trade):
+#     """
+#     precio_entrada / apalancamiento = distancia entre el precio de entrada y el stop loss más alejado
+#     Para trabajar con margen de seguridad le quitamos una unidad al apalancamiento
+#     """
+#     dist = abs(precio_entrada - worst_sl)
+#     apalancamiento = int(precio_entrada / dist) -2
+#     if direccion_trade == 'LONG':
+#         precio_liquidacion = precio_entrada *(1 - 1/apalancamiento)
+#     elif direccion_trade == 'SHORT':
+#         precio_liquidacion = precio_entrada *(1 + 1/apalancamiento)
+#     return apalancamiento, precio_liquidacion
+
+# def precio_liquidacion(apalancamiento, precio_entrada, direccion_trade):
+#     """
+#     Obtener precio de liquidación en función de un apalancamiento dado
+#     """
+#     if direccion_trade == 'LONG':
+#         precio_liquidacion = precio_entrada *(1 - 1/float(apalancamiento))
+#     elif direccion_trade == 'SHORT':
+#         precio_liquidacion = precio_entrada *(1 + 1/float(apalancamiento))
+#     return precio_liquidacion
+
 def apalancamiento(precio_entrada, worst_sl, direccion_trade):
     """
-    precio_entrada / apalancamiento = distancia entre el precio de entrada y el stop loss más alejado
     Para trabajar con margen de seguridad le quitamos una unidad al apalancamiento
     """
-    dist = abs(precio_entrada - worst_sl)
-    apalancamiento = int(precio_entrada / dist) -2
-    if direccion_trade == 'LONG':
-        precio_liquidacion = precio_entrada *(1 - 1/apalancamiento)
-    elif direccion_trade == 'SHORT':
-        precio_liquidacion = precio_entrada *(1 + 1/apalancamiento)
+    apalancamiento = obtener_apalancamiento(precio_entrada, worst_sl) - 2
+    precio_liquidacion = calcular_precio_liquidacion(apalancamiento, precio_entrada, direccion_trade)
     return apalancamiento, precio_liquidacion
 
-def precio_liquidacion(apalancamiento, precio_entrada, direccion_trade):
+
+def obtener_apalancamiento(precio_entrada, worst_sl, adj_factor=0.1):
+    delta = abs(1 - precio_entrada/worst_sl)
+    return int((1-adj_factor)/delta)
+
+def variacion_precio(apal, adj_factor=0.1):
+    return (1/apal) * (1-adj_factor)
+
+def calcular_precio_liquidacion(apalancamiento, precio_entrada, direccion_trade):
     """
     Obtener precio de liquidación en función de un apalancamiento dado
     """
+    distancia = precio_entrada * variacion_precio(apalancamiento)
     if direccion_trade == 'LONG':
-        precio_liquidacion = precio_entrada *(1 - 1/float(apalancamiento))
+        # precio_liquidacion = precio_entrada *(1 - 1/float(apalancamiento))
+        precio_liquidacion = precio_entrada - distancia
     elif direccion_trade == 'SHORT':
-        precio_liquidacion = precio_entrada *(1 + 1/float(apalancamiento))
+        # precio_liquidacion = precio_entrada *(1 + 1/float(apalancamiento))
+        precio_liquidacion = precio_entrada + distancia
     return precio_liquidacion
-
 
 def generar_rows(n_entradas, estado_entradas, ordenes, entradas, sls, qty_entradas, price_precision, qty_precision):
     """Devuelve una lista para completar las tabla de resultados, completando los elementos que no fueron calculados"""

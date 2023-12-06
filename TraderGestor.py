@@ -1,7 +1,7 @@
 import numpy as np
 from tools.ingresar_datos import ingreso_bool_personalizado, ingresar_tasa, ingreso_entero, ingreso_bool, entero_o_porcentual
 from tools.api_bingx import actualizar_contratos, get_account_balance, get_price
-from tools.app_modules import comprobar_apis, imprimir_cuenta, cargar_contrato, apalancamiento, precio_liquidacion, generar_rows, obtener_sl, crear_directorio, alerta
+from tools.app_modules import comprobar_apis, imprimir_cuenta, cargar_contrato, apalancamiento, calcular_precio_liquidacion, generar_rows, obtener_sl, crear_directorio, alerta
 online = comprobar_apis()
 import os
 import pickle
@@ -18,7 +18,7 @@ print ('''
     ============================================================
             BIENVENIDO A LA MEJOR CALCULADORA DE RIESGO
     ============================================================
-TradeGestorDEMO v2
+TradeGestorDEMO v3
 Exchange: BingX
 Cuenta: Future Perpetual
     ''')
@@ -252,7 +252,7 @@ while True:
                 continue
             else:
                 apal_x = max_leverage_l
-                precio_liquidacion = precio_liquidacion(apal_x, entrada_promedio, direccion_trade)
+                calcular_precio_liquidacion = calcular_precio_liquidacion(apal_x, entrada_promedio, direccion_trade)
         if direccion_trade == 'SHORT' and apal_x > max_leverage_s:
             print(f'El apalancamiento máximo para este par es de {max_leverage_s}x\nEl apalancamiento calculado es de {apal_x}x')
             print ('Desea apalancarse al máximo y utilizar un margen mayor de su cuenta?')
@@ -261,7 +261,7 @@ while True:
                 continue
             else:
                 apal_x = max_leverage_s
-                precio_liquidacion = precio_liquidacion(apal_x, entrada_promedio, direccion_trade)
+                calcular_precio_liquidacion = calcular_precio_liquidacion(apal_x, entrada_promedio, direccion_trade)
         ## 1.8.5 Obtener la cantidad de monedas a adquirir por entrada
         qty_entradas = [round(vol_unidad/abs(x[0] - x[-1]), qty_precision) for x in target_entradas]        
         ##TODO: Formula para limitar el riesgo cuando uno se apalanca al máximo -> probablemente de igual a la anterior# qty_entradas = [round(vol_unidad*apal_x/x[0], qty_precision) for x in target_entradas]
